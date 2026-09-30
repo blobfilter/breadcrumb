@@ -1,0 +1,6 @@
+{
+  "name": "Breadcrumb",
+  "description": "Save what matters. Keep why it matters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

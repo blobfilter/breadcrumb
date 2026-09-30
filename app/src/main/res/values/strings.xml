@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Breadcrumb</string>
+    <string name="accessibility_service_label">Breadcrumb Snip &amp; Capture</string>
+    <string name="accessibility_service_description">Floating mascot for instant screen snips and one-tap text capture across apps.</string>
+</resources>

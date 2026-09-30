@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <!-- Face: rect x=14, y=14, width=100, height=100, rx=24 -->
+    <path
+        android:fillColor="#F7F3E8"
+        android:strokeColor="#8D675A"
+        android:strokeWidth="8"
+        android:pathData="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" />
+    <!-- Left Eye: ellipse cx=48, cy=58, rx=5, ry=8 -->
+    <path
+        android:fillColor="#1E2742"
+        android:pathData="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" />
+    <!-- Right Eye: ellipse cx=80, cy=58, rx=5, ry=8 -->
+    <path
+        android:fillColor="#1E2742"
+        android:pathData="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" />
+    <!-- Left Blush: ellipse cx=36, cy=78, rx=10, ry=6 -->
+    <path
+        android:fillColor="#F6B1B1"
+        android:pathData="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" />
+    <!-- Right Blush: ellipse cx=92, cy=78, rx=10, ry=6 -->
+    <path
+        android:fillColor="#F6B1B1"
+        android:pathData="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" />
+    <!-- Smile: M48 84 Q64 98 80 84 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#55555F"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M48,84 Q64,98 80,84" />
+</vector>
