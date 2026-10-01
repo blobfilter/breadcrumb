@@ -1,1 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Breadcrumb — Interactive App Preview</title>
+  <style>
+    :root {
+      --primary: #45779E;
+      --primary-hover: #366183;
+      --on-primary: #FFFFFF;
+      --primary-container: #DCE8F2;
+      --on-primary-container: #1E2742;
+      --crust-brown: #8D675A;
+      --crust-brown-light: #A88476;
+      --mascot-cream: #F7F3E8;
+      --mascot-eye: #1E2742;
+      --mascot-blush: #F6B1B1;
+      --mascot-smile: #55555F;
+      --bg: #FCFBF8;
+      --surface: #FFFFFF;
+      --snippet-box: #F9F7F2;
+      --pill-track: #EFECE6;
+      --outline: #D5CEC4;
+      --squiggle: #D0C8BC;
+      --text-primary: #1E2742;
+      --text-secondary: #646874;
+      --success-green: #2E8B67;
+      --tag-badge-bg: #EBE6DC;
+      --danger: #BA1A1A;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: #EAE6DE;
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 12px 32px;
+      overflow-x: hidden;
+    }
+
+    /* Top Mode Switcher Bar */
+    .top-control-bar {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+      padding: 10px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 18px rgba(30, 39, 66, 0.08);
+      margin-bottom: 14px;
+      border: 1.5px solid var(--squiggle);
+    }
+
+    .brand-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-pill-title {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .brand-pill-badge {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--crust-brown);
+      background: var(--tag-badge-bg);
+      padding: 2px 7px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mode-toggle-group {
+      display: inline-flex;
+      background: var(--pill-track);
+      padding: 3px;
+      border-radius: 30px;
+      border: 1px solid var(--squiggle);
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(69, 119, 158, 0.35);
+    }
+
+    .mode-btn.active.pro-active {
+      background: #2E8B67;
+      box-shadow: 0 2px 6px rgba(46, 139, 103, 0.35);
+    }
+
+    /* Smartphone Frame */
+    .phone-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 412px;
+      height: 846px;
+      background: var(--bg);
+      border-radius: 44px;
+      box-shadow:
+        0 24px 60px -12px rgba(30, 39, 66, 0.28),
+        0 0 0 10px #1E2742,
+        0 0 0 12px #364053;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Hand-Drawn Squiggly Border Utility */
+    .squiggly {
+      border: 1.5px solid var(--squiggle);
+      border-radius: 18px;
+      position: relative;
+    }
+
+    .squiggly-crust {
+      border-color: var(--crust-brown) !important;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 38px;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      z-index: 40;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Phone Screen Container */
+    .screen-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: calc(100% - 38px);
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(30px);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    /* App Header / TopAppBar */
+    .top-app-bar {
+      height: 56px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg);
+      flex-shrink: 0;
+      border-bottom: 1.2px solid rgba(208, 200, 188, 0.7);
+    }
+
+    .top-app-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .pro-badge {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-container);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--crust-brown);
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .top-app-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: background 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--pill-track);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Controls Bar: Sort, Tag, Search, Select */
+    .controls-row {
+      padding: 10px 16px 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .pill-group {
+      display: flex;
+      align-items: center;
+      background: var(--pill-track);
+      border-radius: 24px;
+      padding: 3px;
+      border: 1.3px solid var(--squiggle);
+    }
+
+    .pill-item {
+      padding: 6px 11px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .pill-item.active {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .search-pill-box {
+      flex: 1;
+      height: 36px;
+      background: rgba(239, 236, 230, 0.75);
+      border-radius: 20px;
+      border: 1.3px solid var(--squiggle);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .search-pill-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      user-select: text;
+    }
+
+    .search-pill-box input::placeholder {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .search-lock-overlay {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      border-radius: 20px;
+    }
+
+    .select-mode-btn {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      padding: 6px 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .select-mode-btn:hover {
+      background: var(--primary-container);
+    }
+
+    /* Tag Filter Tray */
+    .tag-filter-tray {
+      padding: 4px 16px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+
+    .tag-filter-tray::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--surface);
+      color: var(--crust-brown);
+      border: 1.2px solid var(--squiggle);
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .filter-chip.selected {
+      background: var(--crust-brown);
+      color: #FFFFFF;
+      border-color: var(--crust-brown);
+    }
+
+    .filter-chip-clear {
+      color: var(--danger);
+      background: #FFEAEA;
+      border-color: #F8B4B4;
+    }
+
+    /* Selection Action Bar (when selecting items) */
+    .selection-bar {
+      height: 56px;
+      padding: 0 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--primary-container);
+      border-bottom: 1.2px solid var(--primary);
+      flex-shrink: 0;
+    }
+
+    .selection-bar.active {
+      display: flex;
+    }
+
+    /* Captures List Area */
+    .captures-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 16px 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Capture Card */
+    .capture-card {
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1.5px solid var(--squiggle);
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(30, 39, 66, 0.04);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+      position: relative;
+    }
+
+    .capture-card:hover {
+      border-color: var(--primary);
+    }
+
+    .capture-card.selected-card {
+      border-color: var(--primary) !important;
+      background: #EBF3F9 !important;
+    }
+
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .card-context-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.8px;
+    }
+
+    .card-tag-pill {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--crust-brown);
+      background: var(--tag-badge-bg);
+      padding: 2px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(141, 103, 90, 0.35);
+    }
+
+    .card-timestamp {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .card-context-note {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    /* Inner Snippet Box */
+    .snippet-box {
+      background: var(--snippet-box);
+      border: 1.3px solid var(--squiggle);
+      border-radius: 14px;
+      padding: 12px;
+      position: relative;
+    }
+
+    .snippet-box-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .snippet-text {
+      font-size: 13.5px;
+      color: var(--text-primary);
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .snippet-link {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 700;
+      word-break: break-all;
+      text-decoration: underline;
+    }
+
+    .snippet-image-container {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--squiggle);
+      margin-top: 4px;
+      max-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+    }
+
+    .snippet-image-container img,
+    .snippet-image-container svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Card Expanded Actions */
+    .card-actions-drawer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1.2px dashed var(--squiggle);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .drawer-btn {
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1.2px solid var(--squiggle);
+      background: var(--surface);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .drawer-btn:hover {
+      background: var(--pill-track);
+    }
+
+    .drawer-btn.delete-btn {
+      color: var(--danger);
+      border-color: #F8B4B4;
+    }
+
+    .drawer-btn.delete-btn:hover {
+      background: #FFEAEA;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      gap: 12px;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .empty-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      max-width: 250px;
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab-btn {
+      position: absolute;
+      bottom: 22px;
+      right: 22px;
+      width: 58px;
+      height: 58px;
+      background: var(--primary);
+      color: #FFFFFF;
+      border-radius: 20px;
+      border: 1.8px solid var(--crust-brown);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(69, 119, 158, 0.4);
+      cursor: pointer;
+      z-index: 30;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .fab-btn:hover {
+      background: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
+    .fab-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Floating Mascot Overlay (Screen Snip Trigger) */
+    .floating-mascot-overlay {
+      position: absolute;
+      right: 0;
+      top: 52%;
+      transform: translateY(-50%);
+      background: var(--mascot-cream);
+      border: 2px solid var(--crust-brown);
+      border-right: none;
+      border-radius: 24px 0 0 24px;
+      padding: 8px 6px 8px 10px;
+      box-shadow: -4px 6px 18px rgba(30, 39, 66, 0.16);
+      cursor: pointer;
+      z-index: 35;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: transform 0.18s ease;
+    }
+
+    .floating-mascot-overlay:hover {
+      transform: translateY(-50%) translateX(-4px);
+    }
+
+    .mascot-snip-tag {
+      font-size: 8px;
+      font-weight: 900;
+      color: var(--crust-brown);
+      letter-spacing: 0.5px;
+    }
+
+    /* Sheets & Modals */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(30, 39, 66, 0.5);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-sheet {
+      background: var(--bg);
+      border-radius: 28px 28px 0 0;
+      border-top: 2px solid var(--crust-brown);
+      padding: 20px;
+      box-shadow: 0 -8px 30px rgba(30, 39, 66, 0.2);
+      transform: translateY(100%);
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 85%;
+      overflow-y: auto;
+    }
+
+    .modal-backdrop.active .bottom-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sheet-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+
+    .sheet-type-pill {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.8px;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--crust-brown);
+      margin: 12px 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .text-input, .textarea-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--squiggle);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      outline: none;
+      font-family: inherit;
+      user-select: text;
+    }
+
+    .text-input:focus, .textarea-input:focus {
+      border-color: var(--primary);
+    }
+
+    .textarea-input {
+      resize: none;
+      height: 70px;
+    }
+
+    .locked-tag-box {
+      background: var(--pill-track);
+      border: 1.2px dashed var(--squiggle);
+      border-radius: 12px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .locked-tag-box span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sheet-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      height: 48px;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1.8px solid var(--crust-brown);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      height: 48px;
+      padding: 0 16px;
+      background: transparent;
+      border: 1.5px solid var(--squiggle);
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    /* Screen Snip Overlay Simulation */
+    .snip-canvas-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.82);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .snip-canvas-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .snip-toolbar-top {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #FFFFFF;
+    }
+
+    .snip-crop-window {
+      width: 86%;
+      height: 280px;
+      border: 2px dashed #FFFFFF;
+      border-radius: 16px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='240' viewBox='0 0 300 240'%3E%3Crect width='300' height='240' fill='%23F9F7F2'/%3E%3Ccircle cx='40' cy='40' r='16' fill='%2345779E'/%3E%3Crect x='68' y='32' width='140' height='16' rx='4' fill='%231E2742'/%3E%3Crect x='28' y='76' width='240' height='10' rx='3' fill='%23D0C8BC'/%3E%3Crect x='28' y='96' width='210' height='10' rx='3' fill='%23D0C8BC'/%3E%3Crect x='28' y='116' width='180' height='10' rx='3' fill='%23D0C8BC'/%3E%3Crect x='28' y='146' width='120' height='50' rx='8' fill='%23DCE8F2'/%3E%3Crect x='160' y='146' width='110' height='50' rx='8' fill='%23EBE6DC'/%3E%3C/svg%3E") center/cover no-repeat;
+    }
+
+    .snip-crop-tag {
+      background: rgba(30, 39, 66, 0.85);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    /* Screen: Upgrade Screen */
+    .screen-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .upgrade-mascot-box {
+      margin: 10px 0 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .upgrade-headline {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+
+    .upgrade-subprice {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .comparison-card {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--squiggle);
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 14px;
+    }
+
+    .comp-title {
+      font-size: 10.5px;
+      font-weight: 900;
+      color: var(--crust-brown);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .comp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #F1EFEA;
+    }
+
+    .comp-row:last-child {
+      border-bottom: none;
+    }
+
+    .comp-row-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comp-row-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .comp-row-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .comp-badges {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .comp-badge {
+      font-size: 11px;
+      font-weight: 800;
+      width: 44px;
+      text-align: center;
+    }
+
+    .comp-badge.yes {
+      color: var(--success-green);
+    }
+
+    .comp-badge.lock {
+      color: var(--danger);
+    }
+
+    /* Screen: Customise / Settings */
+    .settings-section-title {
+      font-size: 10.5px;
+      font-weight: 900;
+      color: var(--crust-brown);
+      letter-spacing: 1px;
+      margin: 16px 0 8px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .settings-card {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--squiggle);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #F1EFEA;
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .setting-text h4 {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .setting-text p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .status-pill.active {
+      background: #D6F0E4;
+      color: var(--success-green);
+    }
+
+    .status-pill.disabled {
+      background: #EFECE6;
+      color: var(--text-secondary);
+    }
+
+    /* Switch Component */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #D0C8BC;
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: rgba(30, 39, 66, 0.95);
+      color: #FFFFFF;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 12px;
+      font-weight: 700;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.22s ease;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* SVG Icon Helpers */
+    .svg-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controller Bar: Live Pro / Regular Mode Switch -->
+  <div class="top-control-bar">
+    <div class="brand-pill">
+      <!-- Mascot SVG -->
+      <svg width="24" height="24" viewBox="0 0 128 128">
+        <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+        <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+        <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+        <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+        <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+        <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <span class="brand-pill-title">Breadcrumb</span>
+        <span class="brand-pill-badge" id="previewModeLabel">REGULAR</span>
+      </div>
+    </div>
+
+    <!-- Toggle between Regular (Free) and Pro ($10) -->
+    <div class="mode-toggle-group">
+      <button class="mode-btn active" id="btnRegularMode" onclick="setProMode(false)">
+        Regular
+      </button>
+      <button class="mode-btn" id="btnProMode" onclick="setProMode(true)">
+        Pro 👑
+      </button>
+    </div>
+  </div>
+
+  <!-- Android Device Shell -->
+  <div class="phone-wrapper">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span id="liveClock">9:41</span>
+      <div class="status-icons">
+        <!-- Wi-Fi -->
+        <svg class="svg-icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98A16.88 16.88 0 0 0 12 4z"/></svg>
+        <!-- Cell -->
+        <svg class="svg-icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M2 22h20V2z"/></svg>
+        <!-- Battery -->
+        <svg class="svg-icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+      </div>
+    </div>
+
+    <!-- Screens Wrapper -->
+    <div class="screen-container">
+
+      <!-- ================= SCREEN 1: HOME ================= -->
+      <div class="screen active" id="screenHome">
+        
+        <!-- Standard Header -->
+        <div class="top-app-bar" id="standardTopBar">
+          <div class="top-app-bar-left">
+            <svg width="30" height="30" viewBox="0 0 128 128">
+              <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+              <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <span class="app-title">Breadcrumb</span>
+            <span class="pro-badge" id="homeProBadge" style="display:none;">PRO</span>
+          </div>
+
+          <div class="top-app-bar-actions">
+            <!-- Crown / Upgrade Button -->
+            <button class="icon-btn" onclick="navigateTo('screenUpgrade')" title="Breadcrumb Pro">
+              <svg class="svg-icon" style="color:var(--crust-brown);" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+            </button>
+            <!-- Settings / Customise Button -->
+            <button class="icon-btn" onclick="navigateTo('screenCustomise')" title="Customise & Settings">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.485.485 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Selection Mode Header (When cards are being selected) -->
+        <div class="selection-bar" id="selectionTopBar">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="icon-btn" onclick="exitSelectionMode()">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <span style="font-weight:800;font-size:15px;" id="selectedCountText">0 selected</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button class="icon-btn" onclick="toggleSelectAll()" title="Select All">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg>
+            </button>
+            <button class="icon-btn" onclick="deleteSelectedCaptures()" style="color:var(--danger)" title="Delete Selected">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls: [Recent/Oldest | Tag] + Search Box + Select -->
+        <div class="controls-row">
+          <div class="pill-group">
+            <div class="pill-item active" id="sortRecentPill" onclick="toggleSort()">
+              <svg class="svg-icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              <span id="sortLabel">Recent</span>
+            </div>
+            <div class="pill-item" id="tagTriggerPill" onclick="onTagPillClick()">
+              <svg class="svg-icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+              <span id="activeTagPillText">Tag</span>
+            </div>
+          </div>
+
+          <!-- Search Pill -->
+          <div class="search-pill-box" onclick="onSearchBoxClick()">
+            <svg class="svg-icon" style="width:15px;height:15px;color:var(--text-secondary);" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="searchInput" placeholder="Search notes..." oninput="onSearchInput(this.value)" autocomplete="off" />
+            <div class="search-lock-overlay" id="searchLockOverlay" style="display:block;"></div>
+          </div>
+
+          <!-- Multi-select toggle button -->
+          <button class="select-mode-btn" id="btnToggleSelect" onclick="enterSelectionMode()">Select</button>
+        </div>
+
+        <!-- Tag Filter Tray (Visible in Pro when tag is clicked) -->
+        <div class="tag-filter-tray" id="tagFilterTray" style="display:none;">
+          <div class="filter-chip filter-chip-clear" onclick="filterByTag(null)">Clear filter ✕</div>
+          <div class="filter-chip" onclick="filterByTag('design')">#design</div>
+          <div class="filter-chip" onclick="filterByTag('android')">#android</div>
+          <div class="filter-chip" onclick="filterByTag('inspo')">#inspo</div>
+          <div class="filter-chip" onclick="filterByTag('recipe')">#recipe</div>
+          <div class="filter-chip" onclick="filterByTag('quote')">#quote</div>
+        </div>
+
+        <!-- Captures Feed List -->
+        <div class="captures-scroll-area" id="capturesList">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Edge-docked Floating Mascot Overlay (Triggers Snip Tool) -->
+        <div class="floating-mascot-overlay" id="floatingMascotOverlay" onclick="openSnipTool()" title="Tap to snip screen">
+          <svg width="26" height="26" viewBox="0 0 128 128">
+            <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+            <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+            <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+            <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+            <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+            <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+          <span class="mascot-snip-tag">SNIP</span>
+        </div>
+
+        <!-- Floating Action Button: Add Breadcrumb -->
+        <div class="fab-btn" onclick="openAddMenu()" title="Add Breadcrumb">
+          <svg class="svg-icon" style="width:28px;height:28px" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </div>
+      </div>
+
+
+      <!-- ================= SCREEN 2: UPGRADE (PRO) ================= -->
+      <div class="screen" id="screenUpgrade">
+        <div class="top-app-bar">
+          <div class="top-app-bar-left">
+            <button class="icon-btn" onclick="navigateTo('screenHome')">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
+            <span class="app-title" style="font-size:18px;">Breadcrumb Pro</span>
+          </div>
+        </div>
+
+        <div class="screen-scroll-body">
+          <div class="upgrade-mascot-box">
+            <svg width="68" height="68" viewBox="0 0 128 128">
+              <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+              <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <h2 class="upgrade-headline">Breadcrumb Pro</h2>
+            <p class="upgrade-subprice">One-time • $10 • Lifetime access</p>
+          </div>
+
+          <!-- Feature comparison table -->
+          <div class="comparison-card">
+            <div class="comp-title">FREE VS PRO</div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Capture Anywhere</span>
+                <span class="comp-row-desc">Text, links, and screenshots</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge yes">✓ Free</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Context Notes</span>
+                <span class="comp-row-desc">Save the why behind each item</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge yes">✓ Free</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Full Control</span>
+                <span class="comp-row-desc">Copy, edit, and delete anytime</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge yes">✓ Free</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Sorting</span>
+                <span class="comp-row-desc">Newest or oldest</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge yes">✓ Free</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div style="height:1px;background:var(--squiggle);margin:8px 0;"></div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Search Notes</span>
+                <span class="comp-row-desc">Full-text search across all notes</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge lock">🔒 Lock</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Tagging & Filter Chips</span>
+                <span class="comp-row-desc">1-tap tag filter chips on home</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge lock">🔒 Lock</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+
+            <div class="comp-row">
+              <div class="comp-row-left">
+                <span class="comp-row-name">Custom Tags</span>
+                <span class="comp-row-desc">Group captures by topic</span>
+              </div>
+              <div class="comp-badges">
+                <span class="comp-badge lock">🔒 Lock</span>
+                <span class="comp-badge yes">✓ Pro</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Pro Active Card vs Upgrade Buttons -->
+          <div id="upgradeActionContainer" style="width:100%;margin-top:20px;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div style="margin-top:14px;background:var(--snippet-box);border:1.2px solid var(--squiggle);border-radius:12px;padding:8px 14px;font-size:11px;color:var(--text-secondary);text-align:center;width:100%;">
+            Test Mode: Pro features active for preview.
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= SCREEN 3: CUSTOMISE / SETTINGS ================= -->
+      <div class="screen" id="screenCustomise">
+        <div class="top-app-bar">
+          <div class="top-app-bar-left">
+            <button class="icon-btn" onclick="navigateTo('screenHome')">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
+            <span class="app-title" style="font-size:18px;">Customise</span>
+          </div>
+        </div>
+
+        <div class="screen-scroll-body" style="align-items:flex-start;">
+          <div class="settings-section-title">CAPTURE STATUS</div>
+          <div class="settings-card">
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg class="svg-icon" style="color:var(--crust-brown);" viewBox="0 0 24 24"><path d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z"/></svg>
+                <div class="setting-text">
+                  <h4>Floating Mascot</h4>
+                  <p id="mascotSubStatus">Edge-docked for instant screen snips</p>
+                </div>
+              </div>
+              <span class="status-pill active" id="mascotPillStatus">Active</span>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg class="svg-icon" style="color:var(--crust-brown);" viewBox="0 0 24 24"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg>
+                <div class="setting-text">
+                  <h4>Text Selection Pill</h4>
+                  <p>Shows quick Save pill on highlight</p>
+                </div>
+              </div>
+              <span class="status-pill active" id="textSelectPillStatus">Active</span>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg class="svg-icon" style="color:var(--crust-brown);" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                <div class="setting-text">
+                  <h4>Photo Import</h4>
+                  <p>Pick from photo library</p>
+                </div>
+              </div>
+              <span class="status-pill active">Active</span>
+            </div>
+          </div>
+
+          <div class="settings-section-title">OVERLAY SETTINGS</div>
+          <div class="settings-card">
+            <div class="setting-item">
+              <div class="setting-text">
+                <h4>Floating Mascot</h4>
+                <p>Edge-docked mascot. Tap anytime to snip screen.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleMascotSwitch" checked onchange="toggleMascotOverlay(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-text">
+                <h4>Text Selection Detection</h4>
+                <p>Shows a quick 1-tap Save pill when text is highlighted.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleTextSelectSwitch" checked onchange="toggleTextSelection(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section-title">QUICK ACTIONS</div>
+          <button class="btn-secondary" style="width:100%;height:44px;" onclick="openSnipTool()">
+            Launch Screen Snip Tool
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= ADD MODAL / SAVE FLOW SHEET ================= -->
+    <div class="modal-backdrop" id="saveFlowModal">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-header-left">
+            <svg width="28" height="28" viewBox="0 0 128 128">
+              <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+              <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <div class="sheet-title">Save Breadcrumb</div>
+              <div class="sheet-type-pill" id="sheetTypeLabel">SNIPPET</div>
+            </div>
+          </div>
+          <button class="icon-btn" onclick="closeSaveFlowModal()">✕</button>
+        </div>
+
+        <div style="height:1px;background:var(--squiggle);margin-bottom:12px;"></div>
+
+        <!-- Captured Content Preview -->
+        <div class="snippet-box" id="saveSheetSnippetBox">
+          <div class="snippet-box-header" id="saveSheetSnippetHeader">CONTENT</div>
+          <div id="saveSheetContentPreview"></div>
+        </div>
+
+        <!-- Context Note Input (The "Why") -->
+        <div class="input-label">
+          <span>WHY ARE YOU SAVING THIS? *</span>
+          <span style="font-weight:600;font-size:11px;color:var(--text-secondary);" id="contextCharCount">0/200</span>
+        </div>
+        <textarea class="textarea-input" id="saveContextInput" placeholder="What's the thought, insight, or reminder?" maxlength="200" oninput="updateContextCharCount(this.value)"></textarea>
+
+        <!-- Tag Selection / Locked in Free -->
+        <div class="input-label">TAG (OPTIONAL)</div>
+        <div id="tagInputContainer">
+          <!-- Rendered based on Pro vs Regular -->
+        </div>
+
+        <div class="sheet-footer">
+          <button class="btn-secondary" onclick="closeSaveFlowModal()">Discard</button>
+          <button class="btn-primary" id="btnConfirmSave" onclick="confirmSaveBreadcrumb()">Save Breadcrumb</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ================= ADD MENU MODAL ================= -->
+    <div class="modal-backdrop" id="addMenuModal">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <span class="sheet-title">Add to Breadcrumb</span>
+          <button class="icon-btn" onclick="closeAddMenu()">✕</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+          <button class="btn-secondary" style="height:52px;display:flex;align-items:center;gap:10px;text-align:left;" onclick="startAddCapture('TEXT')">
+            <svg class="svg-icon" style="color:var(--primary);" viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
+            <div>
+              <div style="font-weight:800;font-size:13.5px;">Text Snippet or Quote</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Save an excerpt, idea, or quote</div>
+            </div>
+          </button>
+
+          <button class="btn-secondary" style="height:52px;display:flex;align-items:center;gap:10px;text-align:left;" onclick="startAddCapture('URL')">
+            <svg class="svg-icon" style="color:var(--primary);" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            <div>
+              <div style="font-weight:800;font-size:13.5px;">Web Link</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Save a URL with your take on it</div>
+            </div>
+          </button>
+
+          <button class="btn-secondary" style="height:52px;display:flex;align-items:center;gap:10px;text-align:left;" onclick="closeAddMenu(); openSnipTool();">
+            <svg class="svg-icon" style="color:var(--primary);" viewBox="0 0 24 24"><path d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z"/></svg>
+            <div>
+              <div style="font-weight:800;font-size:13.5px;">Screen Snip</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Crop &amp; annotate a screen region</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ================= SCREEN SNIP TOOL SIMULATION ================= -->
+    <div class="snip-canvas-overlay" id="snipToolOverlay">
+      <div class="snip-toolbar-top">
+        <span style="font-weight:800;font-size:14px;">✂ Screen Snip Tool</span>
+        <button class="icon-btn" style="color:#FFF" onclick="closeSnipTool()">✕</button>
+      </div>
+
+      <div class="snip-crop-window">
+        <span class="snip-crop-tag">Selected Region</span>
+      </div>
+
+      <div style="width:100%;display:flex;gap:10px;">
+        <button class="btn-secondary" style="background:#FFF" onclick="closeSnipTool()">Cancel</button>
+        <button class="btn-primary" onclick="confirmSnipCapture()">Snip &amp; Save</button>
+      </div>
+    </div>
+
+    <!-- In-App Toast -->
+    <div class="toast-msg" id="toast">Saved to Breadcrumb</div>
+
+  </div>
+
+  <script>
+    // In-memory data store for self-contained operation (No external storage)
+    let isPro = false;
+    let currentSort = 'RECENT'; // 'RECENT' or 'OLDEST'
+    let selectedTagFilter = null;
+    let searchQuery = '';
+    let isSelectionMode = false;
+    let selectedCaptureIds = new Set();
+    let isMascotOverlayVisible = true;
+    let isTextSelectionActive = true;
+
+    // Temporary modal state
+    let pendingSaveType = 'TEXT';
+    let pendingSaveContent = '';
+    let pendingSaveImageSvg = null;
+    let pendingSelectedTag = null;
+
+    // Seed Captures (Rich initial sample data demonstrating Breadcrumb concept)
+    let captures = [
+      {
+        id: 'cap_1',
+        itemType: 'TEXT',
+        content: '"Good design is as little design as possible. Less, but better — because it concentrates on the essential aspects, and the products are not burdened with non-essentials."',
+        context: 'Dieter Rams 10th Principle. Essential reminder for keeping the Save sheet fast and distraction-free.',
+        tag: 'design',
+        timestamp: Date.now() - 1000 * 60 * 14 // 14 mins ago
+      },
+      {
+        id: 'cap_2',
+        itemType: 'URL',
+        content: 'https://developer.android.com/design/ui/mobile/canonical-layouts',
+        context: 'Canonical layouts guide for supporting foldable and tablet window size classes gracefully.',
+        tag: 'android',
+        timestamp: Date.now() - 1000 * 60 * 85 // ~1 hour ago
+      },
+      {
+        id: 'cap_3',
+        itemType: 'IMAGE',
+        content: 'Flowchart Snip: Minimalist User Onboarding',
+        imageSvg: `<svg viewBox="0 0 340 130" width="100%" height="100%"><rect width="340" height="130" fill="#F4F8FA" rx="8"/><rect x="20" y="30" width="75" height="50" rx="8" fill="#45779E"/><text x="57" y="60" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">1. Share</text><path d="M100 55 L130 55" stroke="#8D675A" stroke-width="2" stroke-dasharray="3,3"/><rect x="135" y="30" width="75" height="50" rx="8" fill="#8D675A"/><text x="172" y="60" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">2. Context</text><path d="M215 55 L245 55" stroke="#8D675A" stroke-width="2" stroke-dasharray="3,3"/><rect x="250" y="30" width="75" height="50" rx="8" fill="#2E8B67"/><text x="287" y="60" fill="#FFF" font-size="10" font-weight="bold" text-anchor="middle">3. Saved</text></svg>`,
+        context: 'Inspiring 3-step capture flow from mobile teardown: Instant share sheet to 1-field context note.',
+        tag: 'inspo',
+        timestamp: Date.now() - 1000 * 60 * 240 // 4 hours ago
+      },
+      {
+        id: 'cap_4',
+        itemType: 'TEXT',
+        content: 'Sourdough hydration notes: 350g lukewarm water to 500g unbleached bread flour (70%). 20% ripe starter, 2% salt. Rest 45 mins before first stretch and fold.',
+        context: 'Weekend bake formula. Perfect chew and open crumb structure.',
+        tag: 'recipe',
+        timestamp: Date.now() - 1000 * 60 * 60 * 22 // 22 hours ago
+      }
+    ];
+
+    // Clock Updater
+    function updateClock() {
+      const now = new Date();
+      let h = now.getHours();
+      let m = now.getMinutes();
+      m = m < 10 ? '0' + m : m;
+      document.getElementById('liveClock').textContent = `${h}:${m}`;
+    }
+    setInterval(updateClock, 10000);
+    updateClock();
+
+    // Toast helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // Set Pro / Regular Mode
+    function setProMode(pro) {
+      isPro = pro;
+
+      // Update Top Switcher Buttons
+      const btnReg = document.getElementById('btnRegularMode');
+      const btnPro = document.getElementById('btnProMode');
+      const modeLabel = document.getElementById('previewModeLabel');
+
+      if (isPro) {
+        btnReg.classList.remove('active');
+        btnPro.classList.add('active', 'pro-active');
+        modeLabel.textContent = 'PRO';
+        modeLabel.style.color = '#2E8B67';
+        modeLabel.style.background = '#D6F0E4';
+        document.getElementById('homeProBadge').style.display = 'inline-flex';
+        document.getElementById('searchLockOverlay').style.display = 'none';
+        document.getElementById('searchInput').placeholder = 'Search notes & tags...';
+      } else {
+        btnPro.classList.remove('active', 'pro-active');
+        btnReg.classList.add('active');
+        modeLabel.textContent = 'REGULAR';
+        modeLabel.style.color = 'var(--crust-brown)';
+        modeLabel.style.background = 'var(--tag-badge-bg)';
+        document.getElementById('homeProBadge').style.display = 'none';
+        document.getElementById('searchLockOverlay').style.display = 'block';
+        document.getElementById('searchInput').placeholder = 'Search notes (Pro)...';
+        document.getElementById('searchInput').value = '';
+        searchQuery = '';
+        selectedTagFilter = null;
+        document.getElementById('tagFilterTray').style.display = 'none';
+      }
+
+      renderCaptures();
+      renderUpgradeScreen();
+      renderTagInputInSheet();
+      showToast(isPro ? 'Pro Active: Search & Tags Unlocked! 👑' : 'Regular Free Tier Active');
+    }
+
+    // Screen Navigation
+    function navigateTo(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+      if (screenId === 'screenUpgrade') {
+        renderUpgradeScreen();
+      }
+    }
+
+    // Sort Toggle
+    function toggleSort() {
+      if (currentSort === 'RECENT') {
+        currentSort = 'OLDEST';
+        document.getElementById('sortLabel').textContent = 'Oldest';
+      } else {
+        currentSort = 'RECENT';
+        document.getElementById('sortLabel').textContent = 'Recent';
+      }
+      renderCaptures();
+    }
+
+    // Tag Pill Click on Home
+    function onTagPillClick() {
+      if (!isPro) {
+        navigateTo('screenUpgrade');
+      } else {
+        const tray = document.getElementById('tagFilterTray');
+        tray.style.display = tray.style.display === 'none' ? 'flex' : 'none';
+      }
+    }
+
+    // Filter by Tag
+    function filterByTag(tag) {
+      selectedTagFilter = tag;
+      document.getElementById('activeTagPillText').textContent = tag ? `#${tag}` : 'Tag';
+      
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        if (tag && c.textContent.trim() === `#${tag}`) {
+          c.classList.add('selected');
+        } else {
+          c.classList.remove('selected');
+        }
+      });
+      renderCaptures();
+    }
+
+    // Search Box Click (Free -> Prompt Upgrade)
+    function onSearchBoxClick() {
+      if (!isPro) {
+        navigateTo('screenUpgrade');
+      }
+    }
+
+    function onSearchInput(val) {
+      if (!isPro) return;
+      searchQuery = val.trim().toLowerCase();
+      renderCaptures();
+    }
+
+    // Selection Mode
+    function enterSelectionMode() {
+      isSelectionMode = true;
+      selectedCaptureIds.clear();
+      document.getElementById('standardTopBar').style.display = 'none';
+      document.getElementById('selectionTopBar').classList.add('active');
+      updateSelectionCount();
+      renderCaptures();
+    }
+
+    function exitSelectionMode() {
+      isSelectionMode = false;
+      selectedCaptureIds.clear();
+      document.getElementById('selectionTopBar').classList.remove('active');
+      document.getElementById('standardTopBar').style.display = 'flex';
+      renderCaptures();
+    }
+
+    function toggleSelectCard(id, e) {
+      if (e) e.stopPropagation();
+      if (selectedCaptureIds.has(id)) {
+        selectedCaptureIds.delete(id);
+      } else {
+        selectedCaptureIds.add(id);
+      }
+      updateSelectionCount();
+      renderCaptures();
+    }
+
+    function toggleSelectAll() {
+      if (selectedCaptureIds.size === captures.length) {
+        selectedCaptureIds.clear();
+      } else {
+        captures.forEach(c => selectedCaptureIds.add(c.id));
+      }
+      updateSelectionCount();
+      renderCaptures();
+    }
+
+    function updateSelectionCount() {
+      document.getElementById('selectedCountText').textContent = `${selectedCaptureIds.size} selected`;
+    }
+
+    function deleteSelectedCaptures() {
+      if (selectedCaptureIds.size === 0) return;
+      const count = selectedCaptureIds.size;
+      captures = captures.filter(c => !selectedCaptureIds.has(c.id));
+      exitSelectionMode();
+      showToast(`Deleted ${count} item${count > 1 ? 's' : ''}`);
+    }
+
+    function deleteSingleCapture(id, e) {
+      if (e) e.stopPropagation();
+      captures = captures.filter(c => c.id !== id);
+      renderCaptures();
+      showToast('Capture deleted');
+    }
+
+    function copySnippet(text, e) {
+      if (e) e.stopPropagation();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      }
+      showToast('Copied to clipboard!');
+    }
+
+    // Relative Time Formatter
+    function formatTime(timestamp) {
+      const diff = Date.now() - timestamp;
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return 'Just now';
+      if (m < 60) return `${m}m ago`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}h ago`;
+      const d = Math.floor(h / 24);
+      return `${d}d ago`;
+    }
+
+    // Render Captures List
+    function renderCaptures() {
+      const listEl = document.getElementById('capturesList');
+      listEl.innerHTML = '';
+
+      // Filter
+      let filtered = [...captures];
+      if (selectedTagFilter) {
+        filtered = filtered.filter(c => c.tag && c.tag.toLowerCase() === selectedTagFilter.toLowerCase());
+      }
+      if (searchQuery) {
+        filtered = filtered.filter(c =>
+          (c.context && c.context.toLowerCase().includes(searchQuery)) ||
+          (c.content && c.content.toLowerCase().includes(searchQuery)) ||
+          (c.tag && c.tag.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      // Sort
+      if (currentSort === 'RECENT') {
+        filtered.sort((a, b) => b.timestamp - a.timestamp);
+      } else {
+        filtered.sort((a, b) => a.timestamp - b.timestamp);
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 128 128">
+              <path d="M38,14 L90,14 A24,24 0 0,1 114,38 L114,90 A24,24 0 0,1 90,114 L38,114 A24,24 0 0,1 14,90 L14,38 A24,24 0 0,1 38,14 Z" fill="#F7F3E8" stroke="#8D675A" stroke-width="8"/>
+              <path d="M43,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M75,58 a5,8 0 1,0 10,0 a5,8 0 1,0 -10,0" fill="#1E2742"/>
+              <path d="M26,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M82,78 a10,6 0 1,0 20,0 a10,6 0 1,0 -20,0" fill="#F6B1B1"/>
+              <path d="M48,84 Q64,98 80,84" fill="none" stroke="#55555F" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <div class="empty-title">${searchQuery ? 'No matching breadcrumbs' : 'No breadcrumbs yet'}</div>
+            <div class="empty-subtitle">${searchQuery ? 'Try another search term or clear the filter.' : 'Tap the + button to save your first snippet, link, or screen snip.'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isSelected = selectedCaptureIds.has(item.id);
+        const card = document.createElement('div');
+        card.className = `capture-card ${isSelected ? 'selected-card' : ''}`;
+        card.onclick = () => {
+          if (isSelectionMode) {
+            toggleSelectCard(item.id);
+          } else {
+            const drawer = card.querySelector('.card-actions-drawer');
+            if (drawer) {
+              drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+            }
+          }
+        };
+
+        // Inner snippet presentation
+        let snippetMarkup = '';
+        if (item.itemType === 'TEXT') {
+          snippetMarkup = `<div class="snippet-text">${escapeHtml(item.content)}</div>`;
+        } else if (item.itemType === 'URL') {
+          snippetMarkup = `
+            <a href="${escapeHtml(item.content)}" target="_blank" class="snippet-link" onclick="event.stopPropagation()">
+              ${escapeHtml(item.content)}
+            </a>
+          `;
+        } else if (item.itemType === 'IMAGE') {
+          snippetMarkup = `
+            <div class="snippet-image-container">
+              ${item.imageSvg || '<div style="padding:20px;color:var(--text-secondary)">Screen Snip Image</div>'}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="card-header-row">
+            <div class="card-header-left">
+              ${isSelectionMode ? `<input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''} onclick="toggleSelectCard('${item.id}', event)">` : ''}
+              <div class="card-context-badge">
+                <svg class="svg-icon" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                <span>CONTEXT</span>
+              </div>
+              ${item.tag ? `<span class="card-tag-pill">#${escapeHtml(item.tag)}</span>` : ''}
+            </div>
+            <span class="card-timestamp">${formatTime(item.timestamp)}</span>
+          </div>
+
+          <div class="card-context-note">${escapeHtml(item.context)}</div>
+
+          <div class="snippet-box">
+            <div class="snippet-box-header">
+              <svg class="svg-icon" style="width:11px;height:11px" viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
+              <span>${item.itemType}</span>
+            </div>
+            ${snippetMarkup}
+          </div>
+
+          <!-- Drawer on click -->
+          <div class="card-actions-drawer" style="display:none;">
+            <button class="drawer-btn" onclick="copySnippet('${escapeQuote(item.content)}', event)">
+              <svg class="svg-icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              <span>Copy</span>
+            </button>
+            <button class="drawer-btn delete-btn" onclick="deleteSingleCapture('${item.id}', event)">
+              <svg class="svg-icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <span>Delete</span>
+            </button>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    // Render Upgrade Screen (Pro Active vs Purchase)
+    function renderUpgradeScreen() {
+      const container = document.getElementById('upgradeActionContainer');
+      if (isPro) {
+        container.innerHTML = `
+          <div style="background:#D6F0E4;border:1.5px solid var(--success-green);border-radius:16px;padding:16px;text-align:center;">
+            <div style="font-weight:800;font-size:15px;color:var(--success-green);display:flex;align-items:center;justify-content:center;gap:6px;">
+              <span>✓ Pro Active — You're all set!</span>
+            </div>
+            <p style="font-size:11.5px;color:var(--text-secondary);margin-top:4px;">Full-text search, custom tags, and filter chips unlocked.</p>
+            <button class="btn-secondary" style="margin-top:12px;width:100%;height:40px;font-size:12px;" onclick="setProMode(false)">
+              Reset to Free (Testing)
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button class="btn-primary" style="width:100%;height:50px;font-size:15px;" onclick="setProMode(true); showToast('Upgraded to Pro!');">
+            Unlock Pro for $10
+          </button>
+          <button class="btn-secondary" style="width:100%;height:44px;margin-top:10px;" onclick="setProMode(true); showToast('Pro purchase restored!');">
+            Restore Purchase
+          </button>
+        `;
+      }
+    }
+
+    // Add Menu & Save Flow
+    function openAddMenu() {
+      document.getElementById('addMenuModal').classList.add('active');
+    }
+
+    function closeAddMenu() {
+      document.getElementById('addMenuModal').classList.remove('active');
+    }
+
+    function startAddCapture(type) {
+      closeAddMenu();
+      pendingSaveType = type;
+      pendingSelectedTag = null;
+
+      if (type === 'TEXT') {
+        const text = prompt('Enter or paste snippet text:', '“Focus is a matter of deciding what things you’re not going to do.”');
+        if (!text) return;
+        pendingSaveContent = text.trim();
+        pendingSaveImageSvg = null;
+      } else if (type === 'URL') {
+        const url = prompt('Enter website link / URL:', 'https://news.ycombinator.com');
+        if (!url) return;
+        pendingSaveContent = url.trim();
+        pendingSaveImageSvg = null;
+      }
+
+      openSaveFlowModal();
+    }
+
+    function openSaveFlowModal() {
+      document.getElementById('sheetTypeLabel').textContent = pendingSaveType;
+      document.getElementById('saveSheetSnippetHeader').textContent = pendingSaveType;
+      
+      const previewEl = document.getElementById('saveSheetContentPreview');
+      if (pendingSaveType === 'TEXT') {
+        previewEl.innerHTML = `<div class="snippet-text">${escapeHtml(pendingSaveContent)}</div>`;
+      } else if (pendingSaveType === 'URL') {
+        previewEl.innerHTML = `<div class="snippet-link">${escapeHtml(pendingSaveContent)}</div>`;
+      } else if (pendingSaveType === 'IMAGE') {
+        previewEl.innerHTML = `
+          <div class="snippet-image-container">
+            ${pendingSaveImageSvg || '<div style="padding:20px;color:var(--text-secondary)">Screen Snip Image</div>'}
+          </div>
+        `;
+      }
+
+      // Reset inputs
+      document.getElementById('saveContextInput').value = '';
+      updateContextCharCount('');
+      renderTagInputInSheet();
+
+      document.getElementById('saveFlowModal').classList.add('active');
+    }
+
+    function closeSaveFlowModal() {
+      document.getElementById('saveFlowModal').classList.remove('active');
+    }
+
+    function updateContextCharCount(val) {
+      document.getElementById('contextCharCount').textContent = `${val.length}/200`;
+      const btn = document.getElementById('btnConfirmSave');
+      if (val.trim().length > 0) {
+        btn.removeAttribute('disabled');
+      } else {
+        btn.setAttribute('disabled', 'true');
+      }
+    }
+
+    function renderTagInputInSheet() {
+      const container = document.getElementById('tagInputContainer');
+      if (isPro) {
+        container.innerHTML = `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+            <div class="filter-chip ${pendingSelectedTag === 'design' ? 'selected' : ''}" onclick="selectTagForSave('design')">#design</div>
+            <div class="filter-chip ${pendingSelectedTag === 'android' ? 'selected' : ''}" onclick="selectTagForSave('android')">#android</div>
+            <div class="filter-chip ${pendingSelectedTag === 'inspo' ? 'selected' : ''}" onclick="selectTagForSave('inspo')">#inspo</div>
+            <div class="filter-chip ${pendingSelectedTag === 'ideas' ? 'selected' : ''}" onclick="selectTagForSave('ideas')">#ideas</div>
+          </div>
+          <input type="text" class="text-input" placeholder="Or type a custom #tag..." id="customTagInput" oninput="pendingSelectedTag = this.value.replace(/[^a-zA-Z0-9_-]/g, '')">
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="locked-tag-box" onclick="closeSaveFlowModal(); navigateTo('screenUpgrade');">
+            <span>
+              <svg class="svg-icon" style="width:14px;height:14px;color:var(--danger)" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              Tagging requires Breadcrumb Pro
+            </span>
+            <span style="color:var(--primary);font-weight:800;">Unlock 👑</span>
+          </div>
+        `;
+      }
+    }
+
+    function selectTagForSave(tag) {
+      pendingSelectedTag = (pendingSelectedTag === tag) ? null : tag;
+      renderTagInputInSheet();
+    }
+
+    function confirmSaveBreadcrumb() {
+      const context = document.getElementById('saveContextInput').value.trim();
+      if (!context) {
+        showToast('Please enter a context note ("Why it matters")');
+        return;
+      }
+
+      const newCapture = {
+        id: 'cap_' + Date.now(),
+        itemType: pendingSaveType,
+        content: pendingSaveContent,
+        imageSvg: pendingSaveImageSvg,
+        context: context,
+        tag: pendingSelectedTag || null,
+        timestamp: Date.now()
+      };
+
+      captures.unshift(newCapture);
+      closeSaveFlowModal();
+      renderCaptures();
+      showToast('Saved to Breadcrumb!');
+    }
+
+    // Snip Tool Handlers
+    function openSnipTool() {
+      document.getElementById('snipToolOverlay').classList.add('active');
+    }
+
+    function closeSnipTool() {
+      document.getElementById('snipToolOverlay').classList.remove('active');
+    }
+
+    function confirmSnipCapture() {
+      closeSnipTool();
+      pendingSaveType = 'IMAGE';
+      pendingSaveContent = 'Screen Snip: Highlighted Area';
+      pendingSaveImageSvg = `
+        <svg viewBox="0 0 320 120" width="100%" height="100%">
+          <rect width="320" height="120" fill="#FCFBF8" rx="8"/>
+          <rect x="20" y="20" width="180" height="16" rx="4" fill="#45779E"/>
+          <rect x="20" y="44" width="280" height="8" rx="2" fill="#D0C8BC"/>
+          <rect x="20" y="58" width="240" height="8" rx="2" fill="#D0C8BC"/>
+          <rect x="20" y="72" width="140" height="8" rx="2" fill="#D0C8BC"/>
+          <circle cx="270" cy="50" r="18" fill="#F6B1B1"/>
+        </svg>
+      `;
+      pendingSelectedTag = null;
+      openSaveFlowModal();
+    }
+
+    // Customise / Settings Toggles
+    function toggleMascotOverlay(checked) {
+      isMascotOverlayVisible = checked;
+      document.getElementById('floatingMascotOverlay').style.display = checked ? 'flex' : 'none';
+      document.getElementById('mascotPillStatus').textContent = checked ? 'Active' : 'Disabled';
+      document.getElementById('mascotPillStatus').className = `status-pill ${checked ? 'active' : 'disabled'}`;
+      document.getElementById('mascotSubStatus').textContent = checked ? 'Edge-docked for instant screen snips' : 'Disabled in settings';
+      showToast(checked ? 'Floating mascot enabled' : 'Floating mascot hidden');
+    }
+
+    function toggleTextSelection(checked) {
+      isTextSelectionActive = checked;
+      document.getElementById('textSelectPillStatus').textContent = checked ? 'Active' : 'Disabled';
+      document.getElementById('textSelectPillStatus').className = `status-pill ${checked ? 'active' : 'disabled'}`;
+      showToast(checked ? 'Text selection detection on' : 'Text selection detection off');
+    }
+
+    // Escaping utilities
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeQuote(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // Initial Render
+    renderCaptures();
+    renderUpgradeScreen();
+  </script>
+</body>
+</html>
 
